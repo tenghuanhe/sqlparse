@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2016 Andi Albrecht, albrecht.andi@gmail.com
+#
+# This module is part of python-sqlparse and is released under
+# the BSD License: http://www.opensource.org/licenses/bsd-license.php
+
 """Python 2/3 compatibility.
 
 This module only exists to avoid a dependency on six
@@ -9,19 +16,25 @@ https://bitbucket.org/gutworth/six
 """
 
 import sys
+from io import TextIOBase
 
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
+
 if PY3:
-    def u(s):
+    def u(s, encoding=None):
         return str(s)
 
 
-    range = range
+    def unicode_compatible(cls):
+        return cls
+
+
     text_type = str
     string_types = (str,)
     from io import StringIO
+    file_types = (StringIO, TextIOBase)
 
 
 elif PY2:
@@ -33,21 +46,14 @@ elif PY2:
             return unicode(s, encoding)
 
 
-    range = xrange
+    def unicode_compatible(cls):
+        cls.__unicode__ = cls.__str__
+        cls.__str__ = lambda x: x.__unicode__().encode('utf-8')
+        return cls
+
+
     text_type = unicode
-    string_types = (basestring,)
+    string_types = (str, unicode,)
     from StringIO import StringIO
-
-
-# Directly copied from six:
-def with_metaclass(meta, *bases):
-    """Create a base class with a metaclass."""
-
-    # This requires a bit of explanation: the basic idea is to make a dummy
-    # metaclass for one level of class instantiation that replaces itself with
-    # the actual metaclass.
-    class metaclass(meta):
-        def __new__(cls, name, this_bases, d):
-            return meta(name, bases, d)
-
-    return type.__new__(metaclass, 'temporary_class', (), {})
+    file_types = (file, StringIO, TextIOBase)
+    from StringIO import StringIO

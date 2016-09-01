@@ -1,32 +1,26 @@
-# Copyright (C) 2008 Andi Albrecht, albrecht.andi@gmail.com
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2016 Andi Albrecht, albrecht.andi@gmail.com
 #
 # This setup script is part of python-sqlparse and is released under
-# the BSD License: http://www.opensource.org/licenses/bsd-license.php.
+# the BSD License: http://www.opensource.org/licenses/bsd-license.php
 
 import re
-import sys
 
-try:
-    from setuptools import setup, find_packages
-    packages = find_packages(exclude=('tests',))
-except ImportError:
-    if sys.version_info[0] == 3:
-        raise RuntimeError('distribute is required to install this package.')
-    from distutils.core import setup
-    packages = ['sqlparse', 'sqlparse.engine']
+from setuptools import setup, find_packages
 
 
 def get_version():
     """Parse __init__.py for version number instead of importing the file."""
     VERSIONFILE = 'sqlparse/__init__.py'
-    verstrline = open(VERSIONFILE, "rt").read()
     VSRE = r'^__version__ = [\'"]([^\'"]*)[\'"]'
+    with open(VERSIONFILE) as f:
+        verstrline = f.read()
     mo = re.search(VSRE, verstrline, re.M)
     if mo:
         return mo.group(1)
-    else:
-        raise RuntimeError('Unable to find version string in %s.'
-                           % (VERSIONFILE,))
+    raise RuntimeError('Unable to find version in {fn}'.format(fn=VERSIONFILE))
 
 
 LONG_DESCRIPTION = """
@@ -80,19 +74,15 @@ Parsing::
 
 """
 
-VERSION = get_version()
-
-
 setup(
     name='sqlparse',
-    version=VERSION,
-    packages=packages,
-    description='Non-validating SQL parser',
+    version=get_version(),
     author='Andi Albrecht',
     author_email='albrecht.andi@gmail.com',
+    url='https://github.com/andialbrecht/sqlparse',
+    description='Non-validating SQL parser',
     long_description=LONG_DESCRIPTION,
     license='BSD',
-    url='https://github.com/andialbrecht/sqlparse',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -106,7 +96,12 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Topic :: Database',
-        'Topic :: Software Development'
+        'Topic :: Software Development',
     ],
-    scripts=['bin/sqlformat'],
+    packages=find_packages(exclude=('tests',)),
+    entry_points={
+        'console_scripts': [
+            'sqlformat = sqlparse.__main__:main',
+        ]
+    },
 )

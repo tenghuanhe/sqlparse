@@ -1,20 +1,24 @@
-# Copyright (C) 2008 Andi Albrecht, albrecht.andi@gmail.com
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2016 Andi Albrecht, albrecht.andi@gmail.com
 #
 # This module is part of python-sqlparse and is released under
-# the BSD License: http://www.opensource.org/licenses/bsd-license.php.
+# the BSD License: http://www.opensource.org/licenses/bsd-license.php
 
 """Parse SQL statements."""
 
-
-__version__ = '0.2.0.dev0'
-
-
 # Setup namespace
-from sqlparse import engine  # noqa
-from sqlparse import filters  # noqa
-from sqlparse import formatter  # noqa
+from sqlparse import sql
+from sqlparse import cli
+from sqlparse import engine
+from sqlparse import tokens
+from sqlparse import filters
+from sqlparse import formatter
 
-from sqlparse.compat import u  # noqa
+from sqlparse.compat import text_type
+
+__version__ = '0.2.2.dev0'
+__all__ = ['engine', 'filters', 'formatter', 'sql', 'tokens', 'cli']
 
 
 def parse(sql, encoding=None):
@@ -35,11 +39,11 @@ def parsestream(stream, encoding=None):
     :returns: A generator of :class:`~sqlparse.sql.Statement` instances.
     """
     stack = engine.FilterStack()
-    stack.full_analyze()
+    stack.enable_grouping()
     return stack.run(stream, encoding)
 
 
-def format(sql, **options):
+def format(sql, encoding=None, **options):
     """Format *sql* according to *options*.
 
     Available options are documented in :ref:`formatting`.
@@ -49,7 +53,6 @@ def format(sql, **options):
 
     :returns: The formatted SQL statement as string.
     """
-    encoding = options.pop('encoding', None)
     stack = engine.FilterStack()
     options = formatter.validate_options(options)
     stack = formatter.build_filter_stack(stack, options)
@@ -65,11 +68,4 @@ def split(sql, encoding=None):
     :returns: A list of strings.
     """
     stack = engine.FilterStack()
-    stack.split_statements = True
-    return [u(stmt).strip() for stmt in stack.run(sql, encoding)]
-
-
-def split2(stream):
-    from sqlparse.engine.filter import StatementFilter
-    splitter = StatementFilter()
-    return list(splitter.process(None, stream))
+    return [text_type(stmt).strip() for stmt in stack.run(sql, encoding)]
